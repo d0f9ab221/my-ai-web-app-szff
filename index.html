@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamSynth AI - Next-Gen Latent Diffusion Workspace</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                            950: '#1e1b4b',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+<style>
+/* --- CSS: /styles.css --- */
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.5);
+}
+
+/* Custom Range Slider Styling */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #8b5cf6;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+    transition: transform 0.1s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+/* Image Filters */
+.filter-grayscale {
+    filter: grayscale(100%);
+}
+.filter-sepia {
+    filter: sepia(100%);
+}
+.filter-warm {
+    filter: sepia(30%) saturate(140%) hue-rotate(-10deg);
+}
+.filter-cool {
+    filter: saturate(120%) hue-rotate(180deg) brightness(95%);
+}
+.filter-cyber {
+    filter: hue-rotate(90deg) saturate(180%) contrast(120%);
+}
+
+/* Smooth transitions */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+.shimmer-bg {
+    background: linear-gradient(90deg, #0f172a 25%, #1e1b4b 50%, #0f172a 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+}
+</style></head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col overflow-x-hidden selection:bg-brand-500/30 selection:text-brand-200">
+
+    <!-- Header -->
+    <header class="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-brand-600 to-fuchsia-500 p-2.5 rounded-xl shadow-lg shadow-brand-500/20 relative group cursor-pointer">
+                <div class="absolute inset-0 bg-brand-500 rounded-xl blur opacity-40 group-hover:opacity-75 transition-opacity"></div>
+                <i data-lucide="sparkles" class="w-6 h-6 text-white relative z-10 animate-pulse"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-brand-400 bg-clip-text text-transparent">DreamSynth AI</h1>
+                <p class="text-xs text-slate-400 font-medium">Next-Gen Latent Diffusion Workspace</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <!-- Stats Summary -->
+            <div class="hidden md:flex items-center gap-4 text-xs text-slate-400 border border-slate-800 bg-slate-900/50 px-4 py-2 rounded-xl">
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-brand-400"></i>
+                    <span>Creations: <strong id="header-stats-count" class="text-white font-mono">0</strong></span>
+                </div>
+                <div class="h-3 w-[1px] bg-slate-800"></div>
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="heart" class="w-3.5 h-3.5 text-rose-500"></i>
+                    <span>Favorites: <strong id="header-stats-favs" class="text-white font-mono">0</strong></span>
+                </div>
+            </div>
+
+            <button id="btn-sound-toggle" class="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-all hover:border-slate-700" title="Toggle Sound Effects">
+                <i data-lucide="volume-2" class="w-5 h-5" id="sound-icon"></i>
+            </button>
+            <a href="#gallery-section" class="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors bg-slate-900 hover:bg-slate-800 border border-slate-800 px-4 py-2 rounded-xl">
+                <i data-lucide="image" class="w-4 h-4 text-brand-400"></i> Gallery
+            </a>
+            <div class="h-6 w-[1px] bg-slate-800 hidden sm:block"></div>
+            <span class="px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-semibold flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-brand-400 animate-ping"></span>
+                Pollinations API Online
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Panel: Controls & Prompts (7 cols) -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+            
+            <!-- Tab Navigation -->
+            <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800/80">
+                <button id="tab-prompt" class="flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 bg-brand-600 text-white shadow-lg shadow-brand-500/10">
+                    <i data-lucide="terminal" class="w-4 h-4"></i> Prompt Builder
+                </button>
+                <button id="tab-aesthetics" class="flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200">
+                    <i data-lucide="palette" class="w-4 h-4"></i> Aesthetics
+                </button>
+                <button id="tab-parameters" class="flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200">
+                    <i data-lucide="sliders" class="w-4 h-4"></i> Parameters
+                </button>
+            </div>
+
+            <!-- Tab Content 1: Prompt Builder -->
+            <div id="content-prompt" class="space-y-6">
+                <!-- Prompt Input Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-brand-500 via-fuchsia-500 to-cyan-500"></div>
+                    
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <i data-lucide="terminal" class="w-4 h-4 text-brand-400"></i>
+                            Enter Prompt
+                        </label>
+                        <div class="flex gap-2">
+                            <button id="btn-clear-prompt" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-700 transition-all flex items-center gap-1" title="Clear Prompt">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i> Clear
+                            </button>
+                            <button id="btn-surprise" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-700 transition-all flex items-center gap-1">
+                                <i data-lucide="dices" class="w-3.5 h-3.5"></i> Surprise Me
+                            </button>
+                            <button id="btn-enhance" class="text-xs bg-brand-950 hover:bg-brand-900 text-brand-300 px-2.5 py-1.5 rounded-lg border border-brand-800 transition-all flex items-center gap-1" title="Enhance prompt with Pollinations AI">
+                                <i data-lucide="wand-2" class="w-3.5 h-3.5"></i> AI Enhance
+                            </button>
+                        </div>
+                    </div>
+
+                    <textarea id="prompt-input" rows="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none text-sm transition-all font-sans" placeholder="A futuristic cyberpunk city with neon lights, flying cars, rainy night, highly detailed, 8k resolution..."></textarea>
+
+                    <!-- Quick Tags / Modifiers -->
+                    <div class="mt-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-slate-400 block">Quick Modifiers (Click to add):</span>
+                            <input type="text" id="modifier-search" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[10px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-500 w-32" placeholder="Filter tags...">
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1 custom-scrollbar" id="quick-tags-container">
+                            <!-- Dynamic tags from data.js -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content 2: Aesthetics -->
+            <div id="content-aesthetics" class="hidden space-y-6">
+                <!-- Model Selection -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                        <i data-lucide="cpu" class="w-4 h-4 text-brand-400"></i>
+                        Select AI Model
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="model-selection-grid">
+                        <!-- Dynamic models from data.js -->
+                    </div>
+                </div>
+
+                <!-- Style Presets -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <i data-lucide="palette" class="w-4 h-4 text-brand-400"></i>
+                            Choose Style Preset
+                        </h3>
+                        <input type="text" id="style-search" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-500 w-40" placeholder="Search styles...">
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="style-presets-grid">
+                        <!-- Dynamic style cards from data.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content 3: Parameters -->
+            <div id="content-parameters" class="hidden space-y-6">
+                <!-- Aspect Ratio & Batch Size -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Aspect Ratio -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                        <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                            <i data-lucide="crop" class="w-4 h-4 text-brand-400"></i>
+                            Aspect Ratio
+                        </h3>
+                        <div class="grid grid-cols-4 gap-2" id="aspect-ratio-container">
+                            <!-- Dynamic aspect ratios -->
+                        </div>
+                    </div>
+
+                    <!-- Batch Size -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                        <h3 class="text-sm font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                            <i data-lucide="layers" class="w-4 h-4 text-brand-400"></i>
+                            Batch Size
+                        </h3>
+                        <div class="grid grid-cols-4 gap-2" id="batch-size-container">
+                            <button data-batch="1" class="batch-btn py-2.5 rounded-xl border text-sm font-medium transition-all bg-brand-600 border-brand-500 text-white shadow-lg shadow-brand-500/10">1</button>
+                            <button data-batch="2" class="batch-btn py-2.5 rounded-xl border text-sm font-medium transition-all bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200">2</button>
+                            <button data-batch="3" class="batch-btn py-2.5 rounded-xl border text-sm font-medium transition-all bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200">3</button>
+                            <button data-batch="4" class="batch-btn py-2.5 rounded-xl border text-sm font-medium transition-all bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200">4</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Settings Accordion -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                    <button id="accordion-toggle" class="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-800/50 transition-colors">
+                        <span class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <i data-lucide="sliders" class="w-4 h-4 text-brand-400"></i>
+                            Advanced Parameters
+                        </span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-300" id="accordion-icon"></i>
+                    </button>
+                    
+                    <div id="accordion-content" class="hidden border-t border-slate-800/60 p-5 bg-slate-900/50 space-y-5">
+                        <!-- Negative Prompt -->
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-2">Negative Prompt (Avoid these elements)</label>
+                            <input type="text" id="negative-prompt-input" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-500" placeholder="blurry, low quality, distorted, extra limbs, text, watermark" value="">
+                        </div>
+
+                        <!-- Seed -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                                    Seed
+                                    <span class="text-[10px] text-slate-500 font-normal">(Use same seed for similar results)</span>
+                                </label>
+                                <button id="btn-random-seed" class="text-[10px] text-brand-400 hover:text-brand-300 flex items-center gap-1">
+                                    <i data-lucide="shuffle" class="w-3 h-3"></i> Randomize
+                                </button>
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="number" id="seed-input" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-500" value="42">
+                                <button id="btn-lock-seed" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 flex items-center gap-1" title="Lock seed">
+                                    <i data-lucide="lock" class="w-3.5 h-3.5" id="lock-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- CFG Scale & Steps (Simulated for UI completeness) -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold text-slate-300 mb-2">
+                                    <span>Guidance Scale (CFG)</span>
+                                    <span id="cfg-val" class="text-brand-400">7.5</span>
+                                </div>
+                                <input type="range" id="cfg-scale" min="1" max="20" step="0.5" value="7.5" class="w-full accent-brand-500 bg-slate-950 h-1.5 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold text-slate-300 mb-2">
+                                    <span>Inference Steps</span>
+                                    <span id="steps-val" class="text-brand-400">30</span>
+                                </div>
+                                <input type="range" id="steps-scale" min="10" max="150" step="5" value="30" class="w-full accent-brand-500 bg-slate-950 h-1.5 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
+
+                        <!-- Sampler Selection -->
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-2">Sampler</label>
+                            <select id="sampler-select" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                <!-- Dynamic samplers -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button id="btn-generate" class="w-full py-4 bg-gradient-to-r from-brand-600 via-fuchsia-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-bold rounded-2xl shadow-xl shadow-brand-500/20 hover:shadow-brand-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3 text-base relative overflow-hidden group">
+                <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <i data-lucide="sparkles" class="w-5 h-5 animate-pulse"></i>
+                Generate Masterpiece
+            </button>
+
+        </section>
+
+        <!-- Right Panel: Live Generation & Preview (5 cols) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- Live Console / Output Monitor -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex-1 flex flex-col min-h-[450px] relative overflow-hidden">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        <h3 class="text-sm font-semibold text-slate-200">Live Generation Monitor</h3>
+                    </div>
+                    <span class="text-[10px] font-mono text-slate-500" id="generation-status-text">IDLE</span>
+                </div>
+
+                <!-- Main Display Area -->
+                <div class="flex-1 flex flex-col items-center justify-center relative rounded-xl bg-slate-950 border border-slate-800 overflow-hidden min-h-[300px]" id="monitor-display">
+                    
+                    <!-- Idle State -->
+                    <div id="display-idle" class="text-center p-6 flex flex-col items-center gap-3">
+                        <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 mb-2 relative group">
+                            <div class="absolute inset-0 bg-brand-500/10 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <i data-lucide="image-plus" class="w-8 h-8 relative z-10"></i>
+                        </div>
+                        <h4 class="text-sm font-semibold text-slate-300">Ready to Synthesize</h4>
+                        <p class="text-xs text-slate-500 max-w-xs mx-auto">Enter a prompt, choose a style, and hit generate to watch the AI bring your imagination to life.</p>
+                    </div>
+
+                    <!-- Generating State (Progress & Terminal Logs) -->
+                    <div id="display-generating" class="hidden w-full h-full absolute inset-0 flex flex-col p-4 bg-slate-950/95 z-10">
+                        <div class="flex-1 flex flex-col justify-center items-center gap-4">
+                            <!-- Custom Circular Loader -->
+                            <div class="relative w-24 h-24">
+                                <div class="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+                                <div class="absolute inset-0 rounded-full border-4 border-t-brand-500 border-r-fuchsia-500 animate-spin"></div>
+                                <div class="absolute inset-3 rounded-full bg-slate-900 flex items-center justify-center">
+                                    <span id="generation-progress-percent" class="text-sm font-bold font-mono text-brand-400">0%</span>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-xs font-semibold text-slate-300" id="generation-step-label">Initializing Latent Space...</p>
+                                <p class="text-[10px] text-slate-500 mt-1 font-mono" id="generation-timer">Elapsed: 0.0s</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Terminal Logs -->
+                        <div class="h-28 bg-slate-900 border border-slate-800 rounded-lg p-3 font-mono text-[10px] text-slate-400 overflow-y-auto custom-scrollbar flex flex-col gap-1" id="terminal-logs">
+                            <!-- Dynamic logs -->
+                        </div>
+                    </div>
+
+                    <!-- Active Image Preview (Batch Carousel / Single View) -->
+                    <div id="display-preview" class="hidden w-full h-full absolute inset-0 flex flex-col">
+                        <div class="flex-1 relative bg-slate-900 flex items-center justify-center overflow-hidden">
+                            <img id="preview-img" src="" alt="Generated Preview" class="max-w-full max-h-full object-contain transition-all duration-300">
+                            
+                            <!-- Navigation arrows for batch -->
+                            <button id="prev-preview-btn" class="absolute left-2 top-1/2 -translate-y-1/2 bg-slate-950/80 hover:bg-slate-900 p-1.5 rounded-full border border-slate-800 text-slate-300 transition-all hidden">
+                                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                            </button>
+                            <button id="next-preview-btn" class="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-950/80 hover:bg-slate-900 p-1.5 rounded-full border border-slate-800 text-slate-300 transition-all hidden">
+                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                            </button>
+
+                            <!-- Batch Indicator -->
+                            <div id="batch-indicator" class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-slate-950/80 px-2.5 py-1 rounded-full border border-slate-800 text-[10px] font-mono text-slate-300 flex gap-1.5 items-center hidden">
+                                <!-- Dots -->
+                            </div>
+                        </div>
+                        
+                        <!-- Preview Actions -->
+                        <div class="bg-slate-900 border-t border-slate-800 p-3 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5">
+                                <button id="btn-preview-favorite" class="p-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-rose-500 transition-all" title="Favorite">
+                                    <i data-lucide="heart" class="w-4 h-4"></i>
+                                </button>
+                                <button id="btn-preview-remix" class="p-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-brand-400 transition-all" title="Remix Prompt">
+                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                </button>
+                                <button id="btn-preview-copy" class="p-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-brand-400 transition-all" title="Copy Parameters">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="btn-preview-view" class="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-xs font-medium text-slate-300 flex items-center gap-1.5">
+                                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> View Full
+                                </button>
+                                <button id="btn-preview-download" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 rounded-lg text-xs font-semibold text-white flex items-center gap-1.5">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Gallery Section -->
+    <section id="gallery-section" class="border-t border-slate-900 bg-slate-950/50 py-12 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <i data-lucide="images" class="text-brand-500 w-6 h-6"></i>
+                        Your Creative Gallery
+                    </h2>
+                    <p class="text-sm text-slate-400">All your generated masterpieces saved locally in your browser workspace.</p>
+                </div>
+                
+                <!-- Gallery Filters & Search -->
+                <div class="flex flex-wrap items-center gap-3 self-start md:self-auto">
+                    <input type="text" id="gallery-search" class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-500 w-48" placeholder="Search creations...">
+                    <button id="filter-all" class="gallery-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-brand-600 text-white border border-brand-500 shadow-lg shadow-brand-500/10">All Creations</button>
+                    <button id="filter-favorites" class="gallery-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-slate-200">Favorites</button>
+                    <button id="btn-clear-gallery" class="px-3 py-2 rounded-xl text-xs font-semibold bg-rose-950/30 hover:bg-rose-900/40 border border-rose-900/50 text-rose-400 transition-all flex items-center gap-1.5" title="Clear all history">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Gallery Grid -->
+            <div id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <!-- Dynamic gallery items -->
+            </div>
+
+            <!-- Empty Gallery State -->
+            <div id="gallery-empty" class="hidden text-center py-16 border border-dashed border-slate-800 rounded-2xl bg-slate-900/20">
+                <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 mx-auto mb-3">
+                    <i data-lucide="image-off" class="w-6 h-6"></i>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-300">No images generated yet</h4>
+                <p class="text-xs text-slate-500 max-w-xs mx-auto mt-1">Your creations will appear here automatically once generated.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950 py-6 px-6 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>© 2024 DreamSynth AI. Powered by Pollinations.ai. No authentication required.</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-slate-300 transition-colors">Terms</a>
+                <a href="#" class="hover:text-slate-300 transition-colors">Privacy</a>
+                <a href="https://pollinations.ai" target="_blank" class="hover:text-slate-300 transition-colors flex items-center gap-1">Pollinations.ai <i data-lucide="external-link" class="w-3 h-3"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Image Detail Modal -->
+    <div id="image-modal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4 md:p-6 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col lg:flex-row overflow-hidden shadow-2xl relative">
+            
+            <!-- Close Button -->
+            <button id="modal-close-btn" class="absolute top-4 right-4 z-10 bg-slate-950/80 hover:bg-slate-900 p-2 rounded-full border border-slate-800 text-slate-300 transition-all">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Left: Image Viewer & Filters -->
+            <div class="flex-1 bg-slate-950 flex flex-col items-center justify-center p-4 relative min-h-[300px] lg:min-h-0">
+                <img id="modal-img" src="" alt="Full View" class="max-w-full max-h-[50vh] lg:max-h-[70vh] object-contain rounded-lg transition-all duration-200">
+                
+                <!-- Dynamic Canvas Filters Panel -->
+                <div class="w-full mt-4 bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex flex-wrap gap-4 items-center justify-center">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Filters:</span>
+                    <div class="flex gap-2">
+                        <button data-filter="none" class="filter-preset-btn px-2.5 py-1 rounded bg-brand-600 text-white text-xs font-medium">Normal</button>
+                        <button data-filter="grayscale" class="filter-preset-btn px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-medium">Grayscale</button>
+                        <button data-filter="sepia" class="filter-preset-btn px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-medium">Vintage</button>
+                        <button data-filter="warm" class="filter-preset-btn px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-medium">Warm</button>
+                        <button data-filter="cool" class="filter-preset-btn px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-medium">Cool</button>
+                        <button data-filter="cyber" class="filter-preset-btn px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-medium">Cyber</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Metadata & Actions -->
+            <div class="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-slate-800 p-6 flex flex-col justify-between bg-slate-900 overflow-y-auto">
+                <div class="space-y-5">
+                    <div>
+                        <span class="text-[10px] font-bold text-brand-400 uppercase tracking-wider">Prompt</span>
+                        <p id="modal-prompt" class="text-sm text-slate-200 mt-1 font-medium leading-relaxed max-h-32 overflow-y-auto custom-scrollbar pr-1"></p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Style</span>
+                            <p id="modal-style" class="text-xs text-slate-200 mt-0.5 font-semibold"></p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aspect Ratio</span>
+                            <p id="modal-ratio" class="text-xs text-slate-200 mt-0.5 font-semibold"></p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Seed</span>
+                            <p id="modal-seed" class="text-xs text-slate-200 mt-0.5 font-mono font-semibold"></p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Model</span>
+                            <p id="modal-model" class="text-xs text-slate-200 mt-0.5 font-semibold"></p>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</span>
+                            <p id="modal-date" class="text-xs text-slate-200 mt-0.5 font-semibold"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3 mt-6 lg:mt-0">
+                    <button id="modal-btn-remix" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Remix Parameters
+                    </button>
+                    <button id="modal-btn-download" class="w-full py-2.5 bg-brand-600 hover:bg-brand-500 rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="download" class="w-4 h-4"></i> Download Image
+                    </button>
+                    <button id="modal-btn-delete" class="w-full py-2.5 bg-rose-950/30 hover:bg-rose-900/40 border border-rose-900/50 rounded-xl text-xs font-semibold text-rose-400 flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Delete Creation
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    
+    
+    
+<script type="text/javascript">
+/* --- Script: /data.js --- */
+window.AppStore = {
+    models: [
+        {
+            id: 'flux',
+            name: 'Flux.1 Standard',
+            description: 'Ultra-realistic details, perfect prompt adherence, and crisp text rendering.'
+        },
+        {
+            id: 'flux-realism',
+            name: 'Flux Realism',
+            description: 'Optimized for photorealistic portraits, landscapes, and cinematic lighting.'
+        },
+        {
+            id: 'flux-anime',
+            name: 'Flux Anime',
+            description: 'Vibrant colors, clean line art, and beautiful anime/illustration aesthetics.'
+        },
+        {
+            id: 'flux-3d',
+            name: 'Flux 3D',
+            description: 'Cute 3D renders, claymation, isometric game assets, and soft lighting.'
+        },
+        {
+            id: 'any-dark',
+            name: 'Any Dark',
+            description: 'Moody, dark, gothic, and atmospheric fantasy aesthetics.'
+        }
+    ],
+
+    styles: [
+        {
+            id: 'cinematic',
+            name: 'Cinematic',
+            promptSuffix: ', cinematic lighting, highly detailed, 8k resolution, photorealistic, dramatic shadows, depth of field, shot on 35mm lens',
+            icon: 'clapperboard',
+            previewUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=150&auto=format&fit=crop&q=60'
+        },
+        {
+            id: 'anime',
+            name: 'Anime / Manga',
+            promptSuffix: ', anime style, vibrant colors, detailed line art, studio ghibli aesthetic, makoto shinkai vibes, beautiful lighting, masterpiece',
+            icon: 'sparkles',
+            previewUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=60'
+        },
+        {
+            id: 'cyberpunk',
+            name: 'Cyberpunk',
+            promptSuffix: ', cyberpunk aesthetic, neon glow, rainy night, futuristic city, high-tech low-life, volumetric fog, octane render, unreal engine 5',
+            icon: 'zap',
+            previewUrl: 'https://images.unsplash.com/photo-1515621061946-eff1c2a352bd?w=150&auto=format&fit=crop&q=60'
+        },
+        {
+            id: '3d-render',
+            name: '3D Render',
+            promptSuffix: ', 3D render, blender style, claymation, cute character design, soft lighting, vibrant colors, isometric view, raytraced shadows',
+            icon: 'box',
+            previewUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=60'
+        },
+        {
+            id: 'oil-painting',
+            name: 'Oil Painting',
+            promptSuffix: ', oil painting style, thick brush strokes, textured canvas, classical art, rich color palette, dramatic lighting, fine art masterpiece',
+            icon: 'brush',
+            previewUrl: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=150&auto=format&fit=crop&q=60'
+        },
+        {
+            id: 'pixel-art',
+            name: 'Pixel Art',
+            promptSuffix: ', pixel art style, 16-bit, retro video game aesthetic, vibrant colors, clean grid, nostalgic, detailed sprite art',
+            icon: 'grid',
+            previewUrl: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=150&auto=format&fit=crop&q=60'
+        },
+        {
+            id: 'watercolor',
+            name: 'Watercolor',
+            promptSuffix: ', watercolor painting, soft color washes, ink splatters, elegant, minimalist, hand-drawn, textured paper, artistic flow',
+            icon: 'droplet',
+            previewUrl: 'https://images.unsplash.com/photo-1579783928621-7a13d66a62d1?w=150&auto=format&fit=crop&q=60'
+        },
+        {
+            id: 'sketch',
+            name: 'Pencil Sketch',
+            promptSuffix: ', pencil sketch, hand-drawn, detailed crosshatching, graphite texture, monochrome, artistic, realistic shading, paper background',
+            icon: 'pen-tool',
+            previewUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=150&auto=format&fit=crop&q=60'
+        }
+    ],
+
+    modifiers: [
+        { category: 'Lighting', tags: ['Volumetric Lighting', 'Neon Glow', 'Golden Hour', 'Studio Lighting', 'Bioluminescent', 'Chiaroscuro', 'Moody Shadows'] },
+        { category: 'Camera', tags: ['Macro Shot', 'Wide Angle', 'Drone View', 'Close-up', 'Fisheye Lens', 'Bokeh Effect', 'Orthographic View'] },
+        { category: 'Mood', tags: ['Ethereal', 'Melancholic', 'Whimsical', 'Epic & Grand', 'Mysterious', 'Serene', 'Chaotic'] },
+        { category: 'Details', tags: ['Highly Detailed', 'Intricate Patterns', 'Hyperrealistic', 'Concept Art', 'Matte Painting', 'Octane Render'] }
+    ],
+
+    samplePrompts: [
+        "A majestic cosmic whale floating through a nebula of purple and gold stars",
+        "An ancient library hidden inside a giant hollow oak tree, warm candlelight, magical books floating",
+        "A futuristic astronaut standing on a cliff overlooking a neon-lit alien metropolis",
+        "A cozy cottage in the Swiss Alps surrounded by blooming lavender fields, sunset glow",
+        "A cyberpunk street food vendor preparing glowing noodles in a rainy Tokyo alley",
+        "A cute red panda wearing a tiny wizard hat brewing a glowing potion in a forest",
+        "An underwater city made of glowing coral and glass domes, futuristic submarines passing by",
+        "A majestic phoenix rising from golden ashes, highly detailed fire feathers, dark background"
+    ],
+
+    aspectRatios: [
+        { id: '1:1', label: '1:1 Square', width: 512, height: 512, icon: 'square' },
+        { id: '16:9', label: '16:9 Wide', width: 768, height: 432, icon: 'monitor' },
+        { id: '9:16', label: '9:16 Portrait', width: 432, height: 768, icon: 'smartphone' },
+        { id: '4:3', label: '4:3 Classic', width: 640, height: 480, icon: 'tv' }
+    ],
+
+    samplers: [
+        'Euler a (Recommended)',
+        'DPM++ 2M Karras',
+        'Heun',
+        'DDIM',
+        'LMS Karras'
+    ]
+};
+
+/* --- Script: /utils.js --- */
+window.AppHelpers = {
+    // Web Audio API Synthesizer for premium sound effects
+    Audio: {
+        ctx: null,
+        enabled: true,
+
+        init() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        },
+
+        playClick() {
+            if (!this.enabled) return;
+            this.init();
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.1);
+            
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+            
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.1);
+        },
+
+        playSuccess() {
+            if (!this.enabled) return;
+            this.init();
+            const now = this.ctx.currentTime;
+            
+            // Play a beautiful major chord chime
+            const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            freqs.forEach((f, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(f, now + i * 0.05);
+                
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.08, now + i * 0.05 + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6 + i * 0.05);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start(now + i * 0.05);
+                osc.stop(now + 0.8 + i * 0.05);
+            });
+        },
+
+        playGeneratingLoop() {
+            if (!this.enabled) return null;
+            this.init();
+            const osc = this.ctx.createOscillator();
+            const filter = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(55, this.ctx.currentTime); // Low hum
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(120, this.ctx.currentTime);
+            
+            gain.gain.setValueAtTime(0.03, this.ctx.currentTime);
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            osc.start();
+            
+            // Modulate filter frequency to sound like processing
+            const interval = setInterval(() => {
+                if (this.ctx) {
+                    filter.frequency.setValueAtTime(100 + Math.random() * 80, this.ctx.currentTime);
+                }
+            }, 100);
+
+            return {
+                stop: () => {
+                    clearInterval(interval);
+                    try {
+                        osc.stop();
+                    } catch(e) {}
+                }
+            };
+        }
+    },
+
+    // Local Storage Helpers
+    Storage: {
+        saveGallery(items) {
+            localStorage.setItem('dreamsynth_gallery', JSON.stringify(items));
+        },
+        loadGallery() {
+            const data = localStorage.getItem('dreamsynth_gallery');
+            return data ? JSON.parse(data) : [];
+        }
+    },
+
+    // Real AI Prompt Enhancer using Pollinations.ai Text API
+    async fetchEnhancedPrompt(basePrompt, styleName) {
+        try {
+            const systemPrompt = "You are an expert prompt engineer for Stable Diffusion and Midjourney. Enhance the user's prompt to make it highly detailed, visually stunning, and artistic. Keep it concise (under 60 words). Do not include any introductory or concluding text. Return ONLY the enhanced prompt.";
+            const userPrompt = `Enhance this prompt: "${basePrompt}" ${styleName ? `with a ${styleName} style` : ''}`;
+            const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(userPrompt)}?system=${encodeURIComponent(systemPrompt)}`);
+            if (response.ok) {
+                const text = await response.text();
+                return text.trim();
+            }
+        } catch (e) {
+            console.error("Failed to enhance prompt via AI, falling back to local enhancer", e);
+        }
+        // Fallback to local enhancer
+        return this.enhancePromptLocal(basePrompt, styleName);
+    },
+
+    enhancePromptLocal(basePrompt, styleSuffix) {
+        const enhancements = [
+            "hyper-detailed textures",
+            "stunning composition",
+            "unreal engine 5 render",
+            "volumetric atmospheric lighting",
+            "award-winning masterpiece",
+            "intricate details",
+            "perfect lighting balance"
+        ];
+        const shuffled = enhancements.sort(() => 0.5 - Math.random());
+        const extra = shuffled.slice(0, 2).join(', ');
+        return `${basePrompt.trim()}, ${extra}${styleSuffix}`;
+    },
+
+    // Build Pollinations.ai URL
+    buildImageUrl(prompt, width, height, seed, model, negativePrompt) {
+        const cleanPrompt = encodeURIComponent(prompt.trim());
+        let url = `https://image.pollinations.ai/p/${cleanPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+        if (model) {
+            url += `&model=${model}`;
+        }
+        if (negativePrompt) {
+            url += `&negative=${encodeURIComponent(negativePrompt)}`;
+        }
+        return url;
+    },
+
+    // Download image helper with canvas filter support
+    async downloadImage(url, filename, filterType = 'none') {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            
+            if (filterType === 'none') {
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(blobUrl);
+                return;
+            }
+
+            // Apply filter via Canvas
+            const img = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const image = new Image();
+                    image.crossOrigin = "anonymous";
+                    image.src = reader.result;
+                    image.onload = () => resolve(image);
+                    image.onerror = reject;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+
+            if (filterType === 'grayscale') {
+                ctx.filter = 'grayscale(100%)';
+            } else if (filterType === 'sepia') {
+                ctx.filter = 'sepia(100%)';
+            } else if (filterType === 'warm') {
+                ctx.filter = 'sepia(30%) saturate(140%) hue-rotate(-10deg)';
+            } else if (filterType === 'cool') {
+                ctx.filter = 'saturate(120%) hue-rotate(180deg) brightness(95%)';
+            } else if (filterType === 'cyber') {
+                ctx.filter = 'hue-rotate(90deg) saturate(180%) contrast(120%)';
+            }
+
+            ctx.drawImage(img, 0, 0);
+
+            canvas.toBlob((resultBlob) => {
+                const blobUrl = URL.createObjectURL(resultBlob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(blobUrl);
+            }, 'image/png');
+
+        } catch (error) {
+            console.error("Failed to download image directly, opening in new tab instead.", error);
+            window.open(url, '_blank');
+        }
+    }
+};
+
+/* --- Script: /script.js --- */
+document.addEventListener('DOMContentLoaded', () => {
+    const { models, styles, modifiers, samplePrompts, aspectRatios, samplers } = window.AppStore;
+    const { Audio, Storage, fetchEnhancedPrompt, buildImageUrl, downloadImage } = window.AppHelpers;
+
+    // --- State Management ---
+    let state = {
+        prompt: '',
+        selectedModel: models[0].id,
+        selectedStyle: styles[0].id,
+        aspectRatio: aspectRatios[0].id,
+        batchSize: 1,
+        seed: 42,
+        isSeedLocked: false,
+        cfgScale: 7.5,
+        steps: 30,
+        sampler: samplers[0],
+        negativePrompt: '',
+        gallery: Storage.loadGallery(),
+        activeGeneration: null,
+        currentPreviewIndex: 0,
+        activeBatchUrls: [],
+        soundEnabled: true,
+        activeFilter: 'none'
+    };
+
+    // --- UI Elements ---
+    const promptInput = document.getElementById('prompt-input');
+    const btnSurprise = document.getElementById('btn-surprise');
+    const btnEnhance = document.getElementById('btn-enhance');
+    const btnClearPrompt = document.getElementById('btn-clear-prompt');
+    const quickTagsContainer = document.getElementById('quick-tags-container');
+    const modelSelectionGrid = document.getElementById('model-selection-grid');
+    const stylePresetsGrid = document.getElementById('style-presets-grid');
+    const aspectRatioContainer = document.getElementById('aspect-ratio-container');
+    const batchSizeButtons = document.querySelectorAll('.batch-btn');
+    const btnGenerate = document.getElementById('btn-generate');
+    
+    // Tabs
+    const tabPrompt = document.getElementById('tab-prompt');
+    const tabAesthetics = document.getElementById('tab-aesthetics');
+    const tabParameters = document.getElementById('tab-parameters');
+    const contentPrompt = document.getElementById('content-prompt');
+    const contentAesthetics = document.getElementById('content-aesthetics');
+    const contentParameters = document.getElementById('content-parameters');
+
+    // Search Filters
+    const modifierSearch = document.getElementById('modifier-search');
+    const styleSearch = document.getElementById('style-search');
+    const gallerySearch = document.getElementById('gallery-search');
+
+    // Advanced Settings Accordion
+    const accordionToggle = document.getElementById('accordion-toggle');
+    const accordionContent = document.getElementById('accordion-content');
+    const accordionIcon = document.getElementById('accordion-icon');
+    const negativePromptInput = document.getElementById('negative-prompt-input');
+    const btnRandomSeed = document.getElementById('btn-random-seed');
+    const seedInput = document.getElementById('seed-input');
+    const btnLockSeed = document.getElementById('btn-lock-seed');
+    const lockIcon = document.getElementById('lock-icon');
+    const cfgScaleSlider = document.getElementById('cfg-scale');
+    const cfgVal = document.getElementById('cfg-val');
+    const stepsSlider = document.getElementById('steps-scale');
+    const stepsVal = document.getElementById('steps-val');
+    const samplerSelect = document.getElementById('sampler-select');
+
+    // Live Monitor
+    const displayIdle = document.getElementById('display-idle');
+    const displayGenerating = document.getElementById('display-generating');
+    const displayPreview = document.getElementById('display-preview');
+    const previewImg = document.getElementById('preview-img');
+    const prevPreviewBtn = document.getElementById('prev-preview-btn');
+    const nextPreviewBtn = document.getElementById('next-preview-btn');
+    const batchIndicator = document.getElementById('batch-indicator');
+    const generationProgressPercent = document.getElementById('generation-progress-percent');
+    const generationStepLabel = document.getElementById('generation-step-label');
+    const generationTimer = document.getElementById('generation-timer');
+    const terminalLogs = document.getElementById('terminal-logs');
+    const generationStatusText = document.getElementById('generation-status-text');
+
+    // Preview Actions
+    const btnPreviewFavorite = document.getElementById('btn-preview-favorite');
+    const btnPreviewRemix = document.getElementById('btn-preview-remix');
+    const btnPreviewCopy = document.getElementById('btn-preview-copy');
+    const btnPreviewView = document.getElementById('btn-preview-view');
+    const btnPreviewDownload = document.getElementById('btn-preview-download');
+
+    // Gallery
+    const galleryGrid = document.getElementById('gallery-grid');
+    const galleryEmpty = document.getElementById('gallery-empty');
+    const filterAll = document.getElementById('filter-all');
+    const filterFavorites = document.getElementById('filter-favorites');
+    const btnClearGallery = document.getElementById('btn-clear-gallery');
+    let currentGalleryFilter = 'all';
+
+    // Modal
+    const imageModal = document.getElementById('image-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalImg = document.getElementById('modal-img');
+    const modalPrompt = document.getElementById('modal-prompt');
+    const modalStyle = document.getElementById('modal-style');
+    const modalRatio = document.getElementById('modal-ratio');
+    const modalSeed = document.getElementById('modal-seed');
+    const modalModel = document.getElementById('modal-model');
+    const modalDate = document.getElementById('modal-date');
+    const modalBtnRemix = document.getElementById('modal-btn-remix');
+    const modalBtnDownload = document.getElementById('modal-btn-download');
+    const modalBtnDelete = document.getElementById('modal-btn-delete');
+    const filterPresetButtons = document.querySelectorAll('.filter-preset-btn');
+    let activeModalItem = null;
+
+    // Sound Toggle
+    const btnSoundToggle = document.getElementById('btn-sound-toggle');
+    const soundIcon = document.getElementById('sound-icon');
+
+    // --- Initialization --- 
+    function init() {
+        renderModels();
+        renderStylePresets();
+        renderQuickTags();
+        renderAspectRatios();
+        renderSamplers();
+        renderGallery();
+        updateStats();
+        setupEventListeners();
+        lucide.createIcons();
+    }
+
+    // --- Render Functions ---
+    function renderModels() {
+        modelSelectionGrid.innerHTML = models.map(model => `
+            <div data-model-id="${model.id}" class="model-card p-3 rounded-xl border-2 cursor-pointer transition-all ${state.selectedModel === model.id ? 'border-brand-500 bg-brand-950/20 ring-2 ring-brand-500/20' : 'border-slate-800 hover:border-slate-700 bg-slate-950/40'}">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-bold text-white">${model.name}</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">${model.id}</span>
+                </div>
+                <p class="text-[10px] text-slate-400 leading-relaxed">${model.description}</p>
+            </div>
+        `).join('');
+    }
+
+    function renderStylePresets(filterQuery = '') {
+        const filteredStyles = styles.filter(style => 
+            style.name.toLowerCase().includes(filterQuery.toLowerCase())
+        );
+
+        stylePresetsGrid.innerHTML = filteredStyles.map(style => `
+            <div data-style-id="${style.id}" class="style-card group relative h-24 rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${state.selectedStyle === style.id ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-800 hover:border-slate-700'}">
+                <img src="${style.previewUrl}" alt="${style.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-2">
+                    <span class="text-[11px] font-bold text-white tracking-wide truncate w-full">${style.name}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderQuickTags(filterQuery = '') {
+        let html = '';
+        modifiers.forEach(cat => {
+            cat.tags.forEach(tag => {
+                if (tag.toLowerCase().includes(filterQuery.toLowerCase())) {
+                    html += `<button class="quick-tag-btn px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-medium transition-all">+ ${tag}</button>`;
+                }
+            });
+        });
+        quickTagsContainer.innerHTML = html || '<span class="text-xs text-slate-500">No tags found</span>';
+    }
+
+    function renderAspectRatios() {
+        aspectRatioContainer.innerHTML = aspectRatios.map(ratio => `
+            <button data-ratio-id="${ratio.id}" class="ratio-btn py-2.5 rounded-xl border text-xs font-semibold transition-all flex flex-col items-center justify-center gap-1.5 ${state.aspectRatio === ratio.id ? 'bg-brand-600 border-brand-500 text-white shadow-lg shadow-brand-500/10' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'}">
+                <i data-lucide="${ratio.icon}" class="w-4 h-4"></i>
+                <span>${ratio.id}</span>
+            </button>
+        `).join('');
+    }
+
+    function renderSamplers() {
+        samplerSelect.innerHTML = samplers.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
+    function renderGallery(searchQuery = '') {
+        const filtered = state.gallery.filter(item => {
+            const matchesSearch = item.prompt.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                  item.style.toLowerCase().includes(searchQuery.toLowerCase());
+            if (currentGalleryFilter === 'favorites') return item.favorite && matchesSearch;
+            return matchesSearch;
+        });
+
+        if (filtered.length === 0) {
+            galleryGrid.innerHTML = '';
+            galleryEmpty.classList.remove('hidden');
+            return;
+        }
+
+        galleryEmpty.classList.add('hidden');
+        galleryGrid.innerHTML = filtered.map(item => `
+            <div class="group relative bg-slate-900 border border-slate-800 rounded-xl overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all hover:border-slate-700" data-id="${item.id}">
+                <div class="aspect-square bg-slate-950 flex items-center justify-center overflow-hidden">
+                    <img src="${item.url}" alt="${item.prompt}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3">
+                    <div class="flex justify-end">
+                        <button class="btn-gallery-fav p-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-900 text-slate-300 hover:text-rose-500 transition-all" data-id="${item.id}">
+                            <i data-lucide="heart" class="w-4 h-4 ${item.favorite ? 'fill-rose-500 text-rose-500' : ''}"></i>
+                        </button>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-white font-medium line-clamp-2 mb-1">${item.prompt}</p>
+                        <span class="text-[9px] text-brand-400 font-bold uppercase tracking-wider">${item.style}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        lucide.createIcons();
+    }
+
+    function updateStats() {
+        const total = state.gallery.length;
+        const favs = state.gallery.filter(g => g.favorite).length;
+        
+        document.getElementById('header-stats-count').textContent = total;
+        document.getElementById('header-stats-favs').textContent = favs;
+    }
+
+    // --- Event Listeners Setup ---
+    function setupEventListeners() {
+        // Tabs Navigation
+        tabPrompt.addEventListener('click', () => switchTab('prompt'));
+        tabAesthetics.addEventListener('click', () => switchTab('aesthetics'));
+        tabParameters.addEventListener('click', () => switchTab('parameters'));
+
+        // Search Filters
+        modifierSearch.addEventListener('input', (e) => renderQuickTags(e.target.value));
+        styleSearch.addEventListener('input', (e) => renderStylePresets(e.target.value));
+        gallerySearch.addEventListener('input', (e) => renderGallery(e.target.value));
+
+        // Prompt Input
+        promptInput.addEventListener('input', (e) => state.prompt = e.target.value);
+
+        // Clear Prompt
+        btnClearPrompt.addEventListener('click', () => {
+            Audio.playClick();
+            promptInput.value = '';
+            state.prompt = '';
+        });
+
+        // Surprise Me
+        btnSurprise.addEventListener('click', () => {
+            Audio.playClick();
+            const randomPrompt = samplePrompts[Math.floor(Math.random() * samplePrompts.length)];
+            const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+            
+            promptInput.value = randomPrompt;
+            state.prompt = randomPrompt;
+            
+            state.selectedStyle = randomStyle.id;
+            renderStylePresets();
+            
+            promptInput.classList.add('ring-2', 'ring-brand-500');
+            setTimeout(() => promptInput.classList.remove('ring-2', 'ring-brand-500'), 800);
+        });
+
+        // Enhance Prompt with Pollinations AI
+        btnEnhance.addEventListener('click', async () => {
+            Audio.playClick();
+            if (!state.prompt.trim()) {
+                alert("Please enter a basic prompt first to enhance!");
+                return;
+            }
+            
+            btnEnhance.disabled = true;
+            btnEnhance.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Enhancing...`;
+            lucide.createIcons();
+
+            const currentStyle = styles.find(s => s.id === state.selectedStyle);
+            const enhanced = await fetchEnhancedPrompt(state.prompt, currentStyle ? currentStyle.name : '');
+            
+            promptInput.value = enhanced;
+            state.prompt = enhanced;
+            
+            btnEnhance.disabled = false;
+            btnEnhance.innerHTML = `<i data-lucide="wand-2" class="w-3.5 h-3.5"></i> AI Enhance`;
+            lucide.createIcons();
+        });
+
+        // Quick Tags
+        quickTagsContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.quick-tag-btn');
+            if (!btn) return;
+            Audio.playClick();
+            const tagText = btn.textContent.replace('+ ', '').trim();
+            if (state.prompt) {
+                state.prompt = state.prompt.trim().replace(/,$/, '') + `, ${tagText}`;
+            } else {
+                state.prompt = tagText;
+            }
+            promptInput.value = state.prompt;
+        });
+
+        // Model Selection
+        modelSelectionGrid.addEventListener('click', (e) => {
+            const card = e.target.closest('.model-card');
+            if (!card) return;
+            Audio.playClick();
+            state.selectedModel = card.dataset.modelId;
+            renderModels();
+        });
+
+        // Style Presets Selection
+        stylePresetsGrid.addEventListener('click', (e) => {
+            const card = e.target.closest('.style-card');
+            if (!card) return;
+            Audio.playClick();
+            state.selectedStyle = card.dataset.styleId;
+            renderStylePresets();
+        });
+
+        // Aspect Ratio Selection
+        aspectRatioContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.ratio-btn');
+            if (!btn) return;
+            Audio.playClick();
+            state.aspectRatio = btn.dataset.ratioId;
+            renderAspectRatios();
+        });
+
+        // Batch Size Selection
+        batchSizeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                Audio.playClick();
+                batchSizeButtons.forEach(b => b.className = "batch-btn py-2.5 rounded-xl border text-sm font-medium transition-all bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200");
+                btn.className = "batch-btn py-2.5 rounded-xl border text-sm font-medium transition-all bg-brand-600 border-brand-500 text-white shadow-lg shadow-brand-500/10";
+                state.batchSize = parseInt(btn.dataset.batch);
+            });
+        });
+
+        // Advanced Accordion Toggle
+        accordionToggle.addEventListener('click', () => {
+            Audio.playClick();
+            const isHidden = accordionContent.classList.contains('hidden');
+            if (isHidden) {
+                accordionContent.classList.remove('hidden');
+                accordionIcon.style.transform = 'rotate(180deg)';
+            } else {
+                accordionContent.classList.add('hidden');
+                accordionIcon.style.transform = 'rotate(0deg)';
+            }
+        });
+
+        // Negative Prompt
+        negativePromptInput.addEventListener('input', (e) => {
+            state.negativePrompt = e.target.value;
+        });
+
+        // Seed Controls
+        btnRandomSeed.addEventListener('click', () => {
+            Audio.playClick();
+            const rand = Math.floor(Math.random() * 1000000);
+            seedInput.value = rand;
+            state.seed = rand;
+        });
+        seedInput.addEventListener('input', (e) => {
+            state.seed = parseInt(e.target.value) || 42;
+        });
+        btnLockSeed.addEventListener('click', () => {
+            Audio.playClick();
+            state.isSeedLocked = !state.isSeedLocked;
+            if (state.isSeedLocked) {
+                btnLockSeed.className = "px-3 py-1.5 bg-brand-600 border border-brand-500 rounded-lg text-xs text-white flex items-center gap-1";
+                lockIcon.setAttribute('data-lucide', 'lock');
+            } else {
+                btnLockSeed.className = "px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs text-slate-300 flex items-center gap-1";
+                lockIcon.setAttribute('data-lucide', 'unlock');
+            }
+            lucide.createIcons();
+        });
+
+        // Sliders
+        cfgScaleSlider.addEventListener('input', (e) => {
+            state.cfgScale = parseFloat(e.target.value);
+            cfgVal.textContent = state.cfgScale;
+        });
+        stepsSlider.addEventListener('input', (e) => {
+            state.steps = parseInt(e.target.value);
+            stepsVal.textContent = state.steps;
+        });
+        samplerSelect.addEventListener('change', (e) => {
+            state.sampler = e.target.value;
+        });
+
+        // Generate Button
+        btnGenerate.addEventListener('click', generateImages);
+
+        // Preview Navigation
+        prevPreviewBtn.addEventListener('click', () => {
+            Audio.playClick();
+            if (state.currentPreviewIndex > 0) {
+                state.currentPreviewIndex--;
+                updatePreviewDisplay();
+            }
+        });
+        nextPreviewBtn.addEventListener('click', () => {
+            Audio.playClick();
+            if (state.currentPreviewIndex < state.activeBatchUrls.length - 1) {
+                state.currentPreviewIndex++;
+                updatePreviewDisplay();
+            }
+        });
+
+        // Preview Actions
+        btnPreviewFavorite.addEventListener('click', () => {
+            Audio.playClick();
+            const currentUrl = state.activeBatchUrls[state.currentPreviewIndex];
+            const item = state.gallery.find(g => g.url === currentUrl);
+            if (item) {
+                item.favorite = !item.favorite;
+                Storage.saveGallery(state.gallery);
+                renderGallery();
+                updateStats();
+                updatePreviewFavoriteButton(item.favorite);
+            }
+        });
+        btnPreviewRemix.addEventListener('click', () => {
+            Audio.playClick();
+            const currentUrl = state.activeBatchUrls[state.currentPreviewIndex];
+            const item = state.gallery.find(g => g.url === currentUrl);
+            if (item) remixItem(item);
+        });
+        btnPreviewCopy.addEventListener('click', () => {
+            Audio.playClick();
+            const currentUrl = state.activeBatchUrls[state.currentPreviewIndex];
+            const item = state.gallery.find(g => g.url === currentUrl);
+            if (item) {
+                const params = `Prompt: ${item.prompt}\nStyle: ${item.style}\nModel: ${item.model}\nSeed: ${item.seed}\nAspect Ratio: ${item.ratio}`;
+                navigator.clipboard.writeText(params).then(() => {
+                    alert("Generation parameters copied to clipboard!");
+                });
+            }
+        });
+        btnPreviewView.addEventListener('click', () => {
+            Audio.playClick();
+            const currentUrl = state.activeBatchUrls[state.currentPreviewIndex];
+            const item = state.gallery.find(g => g.url === currentUrl);
+            if (item) openModal(item);
+        });
+        btnPreviewDownload.addEventListener('click', () => {
+            Audio.playClick();
+            const currentUrl = state.activeBatchUrls[state.currentPreviewIndex];
+            downloadImage(currentUrl, `dreamsynth-${Date.now()}.png`);
+        });
+
+        // Gallery Filters
+        filterAll.addEventListener('click', () => {
+            Audio.playClick();
+            currentGalleryFilter = 'all';
+            filterAll.className = "gallery-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-brand-600 text-white border border-brand-500 shadow-lg shadow-brand-500/10";
+            filterFavorites.className = "gallery-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-slate-200";
+            renderGallery();
+        });
+        filterFavorites.addEventListener('click', () => {
+            Audio.playClick();
+            currentGalleryFilter = 'favorites';
+            filterFavorites.className = "gallery-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-brand-600 text-white border border-brand-500 shadow-lg shadow-brand-500/10";
+            filterAll.className = "gallery-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-slate-200";
+            renderGallery();
+        });
+        btnClearGallery.addEventListener('click', () => {
+            Audio.playClick();
+            if (confirm("Are you sure you want to clear your entire gallery history? This cannot be undone.")) {
+                state.gallery = [];
+                Storage.saveGallery(state.gallery);
+                renderGallery();
+                updateStats();
+            }
+        });
+
+        // Gallery Grid Clicks (Open Modal / Favorite)
+        galleryGrid.addEventListener('click', (e) => {
+            const favBtn = e.target.closest('.btn-gallery-fav');
+            if (favBtn) {
+                e.stopPropagation();
+                Audio.playClick();
+                const id = favBtn.dataset.id;
+                const item = state.gallery.find(g => g.id === id);
+                if (item) {
+                    item.favorite = !item.favorite;
+                    Storage.saveGallery(state.gallery);
+                    renderGallery();
+                    updateStats();
+                }
+                return;
+            }
+
+            const card = e.target.closest('[data-id]');
+            if (card) {
+                Audio.playClick();
+                const id = card.dataset.id;
+                const item = state.gallery.find(g => g.id === id);
+                if (item) openModal(item);
+            }
+        });
+
+        // Modal Close
+        modalCloseBtn.addEventListener('click', closeModal);
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) closeModal();
+        });
+
+        // Modal Actions
+        modalBtnRemix.addEventListener('click', () => {
+            if (activeModalItem) {
+                remixItem(activeModalItem);
+                closeModal();
+            }
+        });
+        modalBtnDownload.addEventListener('click', () => {
+            if (activeModalItem) {
+                downloadImage(activeModalItem.url, `dreamsynth-${activeModalItem.id}.png`, state.activeFilter);
+            }
+        });
+        modalBtnDelete.addEventListener('click', () => {
+            if (activeModalItem && confirm("Delete this creation from your gallery?")) {
+                state.gallery = state.gallery.filter(g => g.id !== activeModalItem.id);
+                Storage.saveGallery(state.gallery);
+                renderGallery();
+                updateStats();
+                closeModal();
+            }
+        });
+
+        // Modal Filters
+        filterPresetButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                Audio.playClick();
+                filterPresetButtons.forEach(b => b.className = "filter-preset-btn px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-medium");
+                btn.className = "filter-preset-btn px-2.5 py-1 rounded bg-brand-600 text-white text-xs font-medium";
+                
+                state.activeFilter = btn.dataset.filter;
+                modalImg.className = "max-w-full max-h-[50vh] lg:max-h-[70vh] object-contain rounded-lg transition-all duration-200";
+                if (state.activeFilter !== 'none') {
+                    modalImg.classList.add(`filter-${state.activeFilter}`);
+                }
+            });
+        });
+
+        // Sound Toggle Button
+        btnSoundToggle.addEventListener('click', () => {
+            state.soundEnabled = !state.soundEnabled;
+            Audio.enabled = state.soundEnabled;
+            if (state.soundEnabled) {
+                soundIcon.setAttribute('data-lucide', 'volume-2');
+                btnSoundToggle.className = "p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-all";
+            } else {
+                soundIcon.setAttribute('data-lucide', 'volume-x');
+                btnSoundToggle.className = "p-2 rounded-lg bg-rose-950/30 hover:bg-rose-900/40 border border-rose-900/50 text-rose-400 transition-all";
+            }
+            lucide.createIcons();
+        });
+    }
+
+    // --- Tab Switcher ---
+    function switchTab(tabName) {
+        Audio.playClick();
+        
+        // Reset classes
+        tabPrompt.className = "flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200";
+        tabAesthetics.className = "flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200";
+        tabParameters.className = "flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200";
+        
+        contentPrompt.classList.add('hidden');
+        contentAesthetics.classList.add('hidden');
+        contentParameters.classList.add('hidden');
+
+        if (tabName === 'prompt') {
+            tabPrompt.className = "flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 bg-brand-600 text-white shadow-lg shadow-brand-500/10";
+            contentPrompt.classList.remove('hidden');
+        } else if (tabName === 'aesthetics') {
+            tabAesthetics.className = "flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 bg-brand-600 text-white shadow-lg shadow-brand-500/10";
+            contentAesthetics.classList.remove('hidden');
+        } else if (tabName === 'parameters') {
+            tabParameters.className = "flex-1 py-2.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 bg-brand-600 text-white shadow-lg shadow-brand-500/10";
+            contentParameters.classList.remove('hidden');
+        }
+    }
+
+    // --- Image Generation Logic ---
+    async function generateImages() {
+        if (!state.prompt.trim()) {
+            alert("Please enter a prompt to generate an image!");
+            return;
+        }
+
+        if (state.activeGeneration) return;
+
+        btnGenerate.disabled = true;
+        btnGenerate.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Synthesizing...`;
+        lucide.createIcons();
+
+        displayIdle.classList.add('hidden');
+        displayPreview.classList.add('hidden');
+        displayGenerating.classList.remove('hidden');
+        generationStatusText.textContent = "GENERATING";
+        generationStatusText.className = "text-[10px] font-mono text-brand-400 animate-pulse";
+
+        const soundLoop = Audio.playGeneratingLoop();
+
+        terminalLogs.innerHTML = '';
+        addTerminalLog("Initializing DreamSynth Latent Workspace...", "info");
+
+        const ratioObj = aspectRatios.find(r => r.id === state.aspectRatio);
+        const width = ratioObj ? ratioObj.width : 512;
+        const height = ratioObj ? ratioObj.height : 512;
+
+        const styleObj = styles.find(s => s.id === state.selectedStyle);
+        const finalPrompt = state.prompt + (styleObj ? styleObj.promptSuffix : '');
+
+        const baseSeed = state.seed;
+        const batchSeeds = [];
+        for (let i = 0; i < state.batchSize; i++) {
+            batchSeeds.push(baseSeed + i * 1337);
+        }
+
+        const urls = batchSeeds.map(seed => buildImageUrl(finalPrompt, width, height, seed, state.selectedModel, state.negativePrompt));
+        state.activeBatchUrls = urls;
+        state.currentPreviewIndex = 0;
+
+        let progress = 0;
+        const startTime = Date.now();
+        
+        const progressInterval = setInterval(() => {
+            if (progress < 90) {
+                progress += Math.floor(Math.random() * 8) + 2;
+                if (progress > 90) progress = 90;
+                updateProgressUI(progress, startTime);
+            }
+        }, 300);
+
+        const logSteps = [
+            { delay: 400, text: "Connecting to high-performance GPU cluster...", type: "info" },
+            { delay: 1200, text: `Injecting noise vector with seed ${baseSeed}...`, type: "success" },
+            { delay: 2200, text: `Applying style weights: [${styleObj ? styleObj.name : 'None'}]`, type: "info" },
+            { delay: 3200, text: `Running ${state.steps} steps of latent denoising via ${state.sampler}...`, type: "warning" },
+            { delay: 4500, text: "Decoding latent representations into pixel space...", type: "info" },
+            { delay: 5500, text: "Applying high-fidelity upscaling & color grading...", type: "success" }
+        ];
+
+        logSteps.forEach(step => {
+            setTimeout(() => {
+                if (state.activeBatchUrls.length > 0) {
+                    addTerminalLog(step.text, step.type);
+                }
+            }, step.delay);
+        });
+
+        try {
+            addTerminalLog(`Fetching ${state.batchSize} image variation(s) from cluster...`, "info");
+            
+            // Robust parallel loading with individual timeouts
+            const results = await Promise.all(urls.map(async (url, index) => {
+                try {
+                    await new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.src = url;
+                        const timer = setTimeout(() => {
+                            img.src = ''; // Cancel download
+                            reject(new Error("Timeout"));
+                        }, 30000);
+                        img.onload = () => {
+                            clearTimeout(timer);
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            clearTimeout(timer);
+                            reject(new Error("Failed to load"));
+                        };
+                    });
+                    return { url, success: true, index };
+                } catch (e) {
+                    console.warn(`Image ${index} failed to load:`, e);
+                    return { url, success: false, index };
+                }
+            }));
+
+            clearInterval(progressInterval);
+            updateProgressUI(100, startTime);
+            addTerminalLog("Synthesis complete! Rendering output.", "success");
+            
+            if (soundLoop) soundLoop.stop();
+            Audio.playSuccess();
+
+            const newItems = [];
+            const modelObj = models.find(m => m.id === state.selectedModel);
+            
+            results.forEach((res, index) => {
+                if (res.success) {
+                    const newItem = {
+                        id: `ds-${Date.now()}-${index}`,
+                        prompt: state.prompt,
+                        style: styleObj ? styleObj.name : 'None',
+                        model: modelObj ? modelObj.name : 'Flux.1 Standard',
+                        ratio: state.aspectRatio,
+                        seed: batchSeeds[index],
+                        url: res.url,
+                        favorite: false,
+                        date: new Date().toLocaleDateString()
+                    };
+                    newItems.push(newItem);
+                    state.gallery.unshift(newItem);
+                }
+            });
+
+            if (newItems.length === 0) {
+                throw new Error("All images failed to load");
+            }
+
+            Storage.saveGallery(state.gallery);
+            renderGallery();
+            updateStats();
+
+            setTimeout(() => {
+                displayGenerating.classList.add('hidden');
+                displayPreview.classList.remove('hidden');
+                updatePreviewDisplay();
+                
+                btnGenerate.disabled = false;
+                btnGenerate.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5"></i> Generate Masterpiece`;
+                lucide.createIcons();
+                
+                generationStatusText.textContent = "IDLE";
+                generationStatusText.className = "text-[10px] font-mono text-slate-500";
+                
+                if (!state.isSeedLocked) {
+                    const rand = Math.floor(Math.random() * 1000000);
+                    seedInput.value = rand;
+                    state.seed = rand;
+                }
+                
+                state.activeGeneration = null;
+            }, 800);
+
+        } catch (error) {
+            console.error(error);
+            clearInterval(progressInterval);
+            if (soundLoop) soundLoop.stop();
+            addTerminalLog("Error: Synthesis failed. Cluster timed out.", "error");
+            
+            btnGenerate.disabled = false;
+            btnGenerate.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5"></i> Generate Masterpiece`;
+            lucide.createIcons();
+            
+            generationStatusText.textContent = "ERROR";
+            generationStatusText.className = "text-[10px] font-mono text-rose-500";
+            
+            setTimeout(() => {
+                displayGenerating.classList.add('hidden');
+                displayIdle.classList.remove('hidden');
+                state.activeGeneration = null;
+            }, 3000);
+        }
+    }
+
+    function updateProgressUI(progress, startTime) {
+        generationProgressPercent.textContent = `${progress}%`;
+        
+        if (progress < 25) {
+            generationStepLabel.textContent = "Initializing Latent Space...";
+        } else if (progress < 60) {
+            generationStepLabel.textContent = "Denoising Latent Vectors...";
+        } else if (progress < 90) {
+            generationStepLabel.textContent = "Decoding Pixels...";
+        } else {
+            generationStepLabel.textContent = "Finalizing Masterpiece...";
+        }
+
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        generationTimer.textContent = `Elapsed: ${elapsed}s`;
+    }
+
+    function addTerminalLog(text, type = 'info') {
+        const log = document.createElement('div');
+        let color = 'text-slate-400';
+        let prefix = '[INFO]';
+        
+        if (type === 'success') {
+            color = 'text-emerald-400';
+            prefix = '[OK]';
+        } else if (type === 'warning') {
+            color = 'text-amber-400';
+            prefix = '[RUN]';
+        } else if (type === 'error') {
+            color = 'text-rose-400';
+            prefix = '[ERR]';
+        }
+
+        log.className = `${color} flex gap-1.5`;
+        log.innerHTML = `<span class="opacity-50">${prefix}</span> <span>${text}</span>`;
+        terminalLogs.appendChild(log);
+        terminalLogs.scrollTop = terminalLogs.scrollHeight;
+    }
+
+    function updatePreviewDisplay() {
+        const currentUrl = state.activeBatchUrls[state.currentPreviewIndex];
+        previewImg.src = currentUrl;
+
+        if (state.activeBatchUrls.length > 1) {
+            prevPreviewBtn.classList.toggle('hidden', state.currentPreviewIndex === 0);
+            nextPreviewBtn.classList.toggle('hidden', state.currentPreviewIndex === state.activeBatchUrls.length - 1);
+            
+            batchIndicator.classList.remove('hidden');
+            batchIndicator.innerHTML = state.activeBatchUrls.map((_, i) => `
+                <span class="w-1.5 h-1.5 rounded-full ${i === state.currentPreviewIndex ? 'bg-brand-500' : 'bg-slate-700'}"></span>
+            `).join('');
+        } else {
+            prevPreviewBtn.classList.add('hidden');
+            nextPreviewBtn.classList.add('hidden');
+            batchIndicator.classList.add('hidden');
+        }
+
+        const item = state.gallery.find(g => g.url === currentUrl);
+        if (item) {
+            updatePreviewFavoriteButton(item.favorite);
+        }
+    }
+
+    function updatePreviewFavoriteButton(isFav) {
+        if (isFav) {
+            btnPreviewFavorite.className = "p-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-rose-500 transition-all";
+            btnPreviewFavorite.innerHTML = `<i data-lucide="heart" class="w-4 h-4 fill-rose-500"></i>`;
+        } else {
+            btnPreviewFavorite.className = "p-2 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-rose-500 transition-all";
+            btnPreviewFavorite.innerHTML = `<i data-lucide="heart" class="w-4 h-4"></i>`;
+        }
+        lucide.createIcons();
+    }
+
+    // --- Remix Logic ---
+    function remixItem(item) {
+        promptInput.value = item.prompt;
+        state.prompt = item.prompt;
+
+        const styleObj = styles.find(s => s.name === item.style);
+        if (styleObj) {
+            state.selectedStyle = styleObj.id;
+            renderStylePresets();
+        }
+
+        const modelObj = models.find(m => m.name === item.model);
+        if (modelObj) {
+            state.selectedModel = modelObj.id;
+            renderModels();
+        }
+
+        state.aspectRatio = item.ratio;
+        renderAspectRatios();
+
+        state.seed = item.seed;
+        seedInput.value = item.seed;
+        state.isSeedLocked = true;
+        btnLockSeed.className = "px-3 py-1.5 bg-brand-600 border border-brand-500 rounded-lg text-xs text-white flex items-center gap-1";
+        lockIcon.setAttribute('data-lucide', 'lock');
+        lucide.createIcons();
+
+        switchTab('prompt');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- Modal Logic ---
+    function openModal(item) {
+        activeModalItem = item;
+        modalImg.src = item.url;
+        modalPrompt.textContent = item.prompt;
+        modalStyle.textContent = item.style;
+        modalRatio.textContent = item.ratio;
+        modalSeed.textContent = item.seed;
+        modalModel.textContent = item.model || 'Flux.1 Standard';
+        modalDate.textContent = item.date;
+
+        filterPresetButtons.forEach(b => b.className = "filter-preset-btn px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-medium");
+        filterPresetButtons[0].className = "filter-preset-btn px-2.5 py-1 rounded bg-brand-600 text-white text-xs font-medium";
+        modalImg.className = "max-w-full max-h-[50vh] lg:max-h-[70vh] object-contain rounded-lg transition-all duration-200";
+        state.activeFilter = 'none';
+
+        imageModal.classList.remove('hidden');
+        setTimeout(() => {
+            imageModal.classList.remove('opacity-0');
+        }, 50);
+    }
+
+    function closeModal() {
+        imageModal.classList.add('opacity-0');
+        setTimeout(() => {
+            imageModal.classList.add('hidden');
+            activeModalItem = null;
+        }, 300);
+    }
+
+    init();
+});
+</script></body>
+</html>
